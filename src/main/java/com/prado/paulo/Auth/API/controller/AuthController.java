@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.prado.paulo.Auth.API.domain.user.AuthenticationDTO;
+import com.prado.paulo.Auth.API.domain.user.LoginResponseDTO;
 import com.prado.paulo.Auth.API.domain.user.RegisterDTO;
 import com.prado.paulo.Auth.API.domain.user.User;
 import com.prado.paulo.Auth.API.repositories.UserRepository;
+import com.prado.paulo.Auth.API.services.TokenService;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,13 +28,19 @@ public class AuthController {
     @Autowired
     private UserRepository repository;
 
+    @Autowired
+    private TokenService tokenService;
+
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthenticationDTO authenticationDTO) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody AuthenticationDTO authenticationDTO) {
         var usernamePassowrd = new UsernamePasswordAuthenticationToken(authenticationDTO.login(), authenticationDTO.password());
         @SuppressWarnings("unused")
         var auth = this.authenticationManager.authenticate(usernamePassowrd);
 
-        return ResponseEntity.ok().build();
+
+        var token = tokenService.generateToken((User) auth.getPrincipal());
+
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @PostMapping("/register")
